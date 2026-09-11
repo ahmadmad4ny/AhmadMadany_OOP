@@ -16,26 +16,62 @@ public class Main extends ApplicationAdapter {
     private Item pointItem;
     private Item scoreItem;
 
+    private List<GameObject> gameObjects;
 
     @Override
     public void create() {
         shapeRenderer = new ShapeRenderer();
         gameObjects = new ArrayList<>();
 
-        // TODO 2: Instantiate Player (Red square) at (280, 40)
+        player = new Player(
+            280f,
+            40f,
+            "Reimu Hakurei",
+            100,
+            15,
+            3
+        );
 
 
-        // TODO 3: Instantiate Fairy (Pink square) at (150, 380)
+        fairy = new Fairy(
+            150f,
+            380f,
+            "Stage 1 Fairy",
+            20
+        );
 
+        boss = new Boss(
+            380f,
+            400f,
+            "Cirno",
+            150
+        );
 
-        // TODO 4: Instantiate Boss (Blue square) at (380, 400)
+        pointItem = new Item(
+            200f,
+            450f,
+            16f,
+            16f,
+            100f,
+            "Point Item",
+            1000L
+        );
 
+        scoreItem = new Item(
+            300f,
+            500f,
+            16f,
+            16f,
+            120f,
+            "Score Item",
+            1500L
+        );
 
-        // TODO 5: Instantiate Items (White squares) with downward speeds
-
-
-        // TODO 6: Add all entities into the gameObjects list polymorphically
-
+        gameObjects.add(player);
+        gameObjects.add(fairy);
+        gameObjects.add(boss);
+        gameObjects.add(pointItem);
+        gameObjects.add(scoreItem);
     }
 
     @Override

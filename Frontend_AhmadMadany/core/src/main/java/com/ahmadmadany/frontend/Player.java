@@ -49,7 +49,11 @@ public class Player extends GameObject {
         this.power = power;
     }
 
-    public int getSpellCards(int spellCards) {
+    public int getSpellCards() {
+        return spellCards;
+    }
+
+    public void setSpellCards(int spellCards) {
         this.spellCards = spellCards;
     }
 
