@@ -1,5 +1,11 @@
 package com.ahmadmadany.frontend;
 
+import com.ahmadmadany.frontend.objects.GameObject;
+import com.ahmadmadany.frontend.objects.Player;
+import com.ahmadmadany.frontend.objects.enemies.Boss;
+import com.ahmadmadany.frontend.objects.enemies.Fairy;
+import com.ahmadmadany.frontend.objects.items.Item;
+import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -13,15 +19,15 @@ public class Main extends ApplicationAdapter {
     private Player player;
     private Fairy fairy;
     private Boss boss;
+    private Item powerItem;
     private Item pointItem;
-    private Item scoreItem;
 
-    private List<GameObject> gameObjects;
+    private List<GameObject> entities;
 
     @Override
     public void create() {
         shapeRenderer = new ShapeRenderer();
-        gameObjects = new ArrayList<>();
+        entities = new ArrayList<>();
 
         player = new Player(
             280f,
@@ -47,31 +53,15 @@ public class Main extends ApplicationAdapter {
             150
         );
 
-        pointItem = new Item(
-            200f,
-            450f,
-            16f,
-            16f,
-            100f,
-            "Point Item",
-            1000L
-        );
+        pointItem = new Item(320, 480, 12, 12, 120f, ItemType.POINT, 1000L);
 
-        scoreItem = new Item(
-            300f,
-            500f,
-            16f,
-            16f,
-            120f,
-            "Score Item",
-            1500L
-        );
+        powerItem = new Item(200, 450, 16, 16, 80f, ItemType.POWER, 500L);
 
-        gameObjects.add(player);
-        gameObjects.add(fairy);
-        gameObjects.add(boss);
-        gameObjects.add(pointItem);
-        gameObjects.add(scoreItem);
+        entities.add(player);
+        entities.add(fairy);
+        entities.add(boss);
+        entities.add(pointItem);
+        entities.add(powerItem);
     }
 
     @Override
@@ -79,8 +69,20 @@ public class Main extends ApplicationAdapter {
         float delta = Gdx.graphics.getDeltaTime();
 
         // 1. Polymorphic Update Loop: Items move downward automatically via Item.update(delta)
-        for (GameObject obj : gameObjects) {
+        for (GameObject obj : entities) {
             obj.update(delta);
+        }
+
+        for (int i = 0; i < entities.size(); i++) {
+            for (int j = i + 1; j < entities.size(); j++) {
+                GameObject a = entities.get(i);
+                GameObject b = entities.get(j);
+
+                if (a.getCoreHitbox().overlaps(b.getCoreHitbox())){
+                    a.onCollision(b);
+                    b.onCollision(a);
+                }
+            }
         }
 
         // 2. Clear Screen
@@ -88,7 +90,7 @@ public class Main extends ApplicationAdapter {
 
         // 3. Polymorphic Render Loop: Draw hitboxes with ShapeRenderer
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (GameObject obj : gameObjects) {
+        for (GameObject obj : entities) {
             obj.render(shapeRenderer);
         }
         shapeRenderer.end();

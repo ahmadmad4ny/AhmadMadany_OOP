@@ -1,5 +1,11 @@
 package com.ahmadmadany.frontend;
 
+import com.ahmadmadany.frontend.objects.Player;
+import com.ahmadmadany.frontend.objects.enemies.Boss;
+import com.ahmadmadany.frontend.objects.enemies.Enemy;
+import com.ahmadmadany.frontend.objects.enemies.Fairy;
+import com.ahmadmadany.frontend.objects.items.Item;
+
 public class Test {
     public static void main(String[] args) {
         System.out.println("=== TOUHOU OOP PRACTICUM - MODULE 1: BASIC CLASSES & OBJECT INTERACTION ===");

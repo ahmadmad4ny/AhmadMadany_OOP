@@ -1,4 +1,6 @@
-package com.ahmadmadany.frontend;
+package com.ahmadmadany.frontend.objects.enemies;
+import com.ahmadmadany.frontend.objects.GameObject;
+import com.ahmadmadany.frontend.objects.Player;
 import com.badlogic.gdx.graphics.Color;
 
 public class Enemy extends GameObject {
