@@ -113,6 +113,9 @@ public class Main extends ApplicationAdapter {
 
         while (iterator.hasNext()){
             T entity = iterator.next();
+
+            entity.update(delta);
+
             if (entity.isOffScreen(screenWidth, screenHeight) || entity.isDestroyed()){
                 System.out.println(
                     "Removed via Generic Iterator: " + entity.getClass().getSimpleName()
