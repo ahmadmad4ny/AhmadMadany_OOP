@@ -3,6 +3,7 @@ package com.ahmadmadany.frontend.objects;
 import com.ahmadmadany.frontend.objects.enemies.Enemy;
 import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
+import com.ahmadmadany.frontend.objects.bullets.Bullet;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -130,6 +131,7 @@ public class Player extends GameObject {
 
     public void collectItem(Item item) {
         ItemType type = item.getItemTypeEnum();
+        if (item.isDestroyed()) return;
         if (type != null) {
             switch (type) {
                 case POWER -> {
@@ -168,5 +170,21 @@ public class Player extends GameObject {
             addScore(item.getScoreValue());
             System.out.println(name + " collected " + item.getItemType() + "!");
         }
+        item.destroy();
+    }
+
+    public Bullet shootBullet() {
+        int damage = 10 + power;
+
+        System.out.println(
+            name + " shoots bullet dealing " + damage + " DMG!"
+        );
+
+        return new Bullet(
+            x + width / 2 - 4,
+            y + height,
+            BulletType.AMULET,
+            damage
+        );
     }
 }

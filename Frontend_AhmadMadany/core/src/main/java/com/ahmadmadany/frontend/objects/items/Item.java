@@ -10,6 +10,7 @@ public class Item extends GameObject {
     private String itemType;
     private long scoreValue;
     private ItemType itemTypeEnum;
+    private boolean collected = false;
 
     public Item(float x, float y, String itemType) {
         super(x, y, 16f, 16f, 100f, Color.WHITE);

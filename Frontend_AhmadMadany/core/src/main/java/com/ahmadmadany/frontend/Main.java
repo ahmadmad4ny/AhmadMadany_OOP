@@ -10,8 +10,10 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.Input;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 public class Main extends ApplicationAdapter {
     private ShapeRenderer shapeRenderer;
@@ -68,19 +70,27 @@ public class Main extends ApplicationAdapter {
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
 
-        // 1. Polymorphic Update Loop: Items move downward automatically via Item.update(delta)
-        for (GameObject obj : entities) {
-            obj.update(delta);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)){
+            entities.add(player.shootBullet());
         }
+
+        updateAndClean(
+            entities,
+            delta,
+            Gdx.graphics.getWidth(),
+            Gdx.graphics.getHeight()
+        );
 
         for (int i = 0; i < entities.size(); i++) {
             for (int j = i + 1; j < entities.size(); j++) {
                 GameObject a = entities.get(i);
                 GameObject b = entities.get(j);
 
-                if (a.getCoreHitbox().overlaps(b.getCoreHitbox())){
-                    a.onCollision(b);
-                    b.onCollision(a);
+                if (!a.isDestroyed() && !b.isDestroyed()) {
+                    if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
+                        a.onCollision(b);
+                        b.onCollision(a);
+                    }
                 }
             }
         }
@@ -90,10 +100,26 @@ public class Main extends ApplicationAdapter {
 
         // 3. Polymorphic Render Loop: Draw hitboxes with ShapeRenderer
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (GameObject obj : entities) {
-            obj.render(shapeRenderer);
+        for (GameObject entity : entities) {
+            if (!entity.isDestroyed()){
+                entity.render(shapeRenderer);
+            }
         }
         shapeRenderer.end();
+    }
+
+    public <T extends GameObject> void updateAndClean(List<T> list, float delta, float screenWidth, float screenHeight) {
+        Iterator<T> iterator = list.iterator();
+
+        while (iterator.hasNext()){
+            T entity = iterator.next();
+            if (entity.isOffScreen(screenWidth, screenHeight) || entity.isDestroyed()){
+                System.out.println(
+                    "Removed via Generic Iterator: " + entity.getClass().getSimpleName()
+                );
+                iterator.remove();
+            }
+        }
     }
 
     @Override
