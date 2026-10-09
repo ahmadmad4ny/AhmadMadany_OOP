@@ -1,25 +1,35 @@
+
 package com.ahmadmadany.frontend;
 
 import com.ahmadmadany.frontend.objects.GameObject;
 import com.ahmadmadany.frontend.objects.Player;
 import com.ahmadmadany.frontend.objects.enemies.Boss;
+import com.ahmadmadany.frontend.objects.enemies.Enemy;
 import com.ahmadmadany.frontend.objects.enemies.Fairy;
 import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
+import com.ahmadmadany.frontend.systems.AssetManager;
+import com.ahmadmadany.frontend.systems.EntityFactory;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.Input;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 public class Main extends ApplicationAdapter {
+
     private ShapeRenderer shapeRenderer;
+    private SpriteBatch spriteBatch;
+    private AssetManager assetManager;
 
     private Player player;
-    private Fairy fairy;
+    private List<Fairy> fairies;
     private Boss boss;
     private Item powerItem;
     private Item pointItem;
@@ -28,10 +38,19 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
-        shapeRenderer = new ShapeRenderer();
-        entities = new ArrayList<>();
 
-        player = new Player(
+        shapeRenderer = new ShapeRenderer();
+        spriteBatch = new SpriteBatch();
+
+        entities = new ArrayList<>();
+        fairies = new ArrayList<>();
+
+        // Initialize graphics assets
+        assetManager = AssetManager.getInstance();
+        assetManager.init();
+
+        // Create player using Factory Pattern
+        player = EntityFactory.createPlayer(
             280f,
             40f,
             "Reimu Hakurei",
@@ -40,27 +59,31 @@ public class Main extends ApplicationAdapter {
             3
         );
 
-
-        fairy = new Fairy(
-            150f,
-            380f,
-            "Stage 1 Fairy",
-            20
+        Fairy redFairy = EntityFactory.createFairy(
+            150f, 380f, "Red Fairy", 20
         );
 
-        boss = new Boss(
-            380f,
-            400f,
-            "Cirno",
-            150
+        Fairy blueFairy = EntityFactory.createFairy(
+            250f, 380f, "Blue Fairy", 20, "fairy_idle_blue"
         );
 
-        pointItem = new Item(320, 480, 12, 12, 120f, ItemType.POINT, 1000L);
+        fairies.add(redFairy);
+        fairies.add(blueFairy);
 
-        powerItem = new Item(200, 450, 16, 16, 80f, ItemType.POWER, 500L);
+        boss = EntityFactory.createBoss(
+            380f, 400f, "Rumia", 150
+        );
+
+        powerItem = EntityFactory.createItem(
+            200f, 450f, ItemType.POWER
+        );
+
+        pointItem = EntityFactory.createItem(
+            320f, 480f, ItemType.POINT
+        );
 
         entities.add(player);
-        entities.add(fairy);
+        entities.addAll(fairies);
         entities.add(boss);
         entities.add(pointItem);
         entities.add(powerItem);
@@ -68,12 +91,15 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
+
         float delta = Gdx.graphics.getDeltaTime();
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)){
+        // Shoot using Z
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
             entities.add(player.shootBullet());
         }
 
+        // Update and clean entities
         updateAndClean(
             entities,
             delta,
@@ -81,8 +107,10 @@ public class Main extends ApplicationAdapter {
             Gdx.graphics.getHeight()
         );
 
+        // Collision detection
         for (int i = 0; i < entities.size(); i++) {
             for (int j = i + 1; j < entities.size(); j++) {
+
                 GameObject a = entities.get(i);
                 GameObject b = entities.get(j);
 
@@ -95,31 +123,61 @@ public class Main extends ApplicationAdapter {
             }
         }
 
-        // 2. Clear Screen
+        // Clear screen
         ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
 
-        // 3. Polymorphic Render Loop: Draw hitboxes with ShapeRenderer
+        // Render objects without sprites using ShapeRenderer
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
         for (GameObject entity : entities) {
-            if (!entity.isDestroyed()){
+            if (!entity.isDestroyed()
+                && entity.getSprite() == null
+                && entity.getAnimation() == null) {
+
                 entity.render(shapeRenderer);
             }
         }
+
         shapeRenderer.end();
+
+        // Render sprites and animations using SpriteBatch
+        spriteBatch.begin();
+
+        for (GameObject entity : entities) {
+            if (!entity.isDestroyed()
+                && (entity.getSprite() != null
+                || entity.getAnimation() != null)) {
+
+                entity.render(spriteBatch);
+            }
+        }
+
+        spriteBatch.end();
     }
 
-    public <T extends GameObject> void updateAndClean(List<T> list, float delta, float screenWidth, float screenHeight) {
+    // Generic update and cleanup
+    public <T extends GameObject> void updateAndClean(
+        List<T> list,
+        float delta,
+        float screenWidth,
+        float screenHeight) {
+
         Iterator<T> iterator = list.iterator();
 
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
+
             T entity = iterator.next();
 
             entity.update(delta);
 
-            if (entity.isOffScreen(screenWidth, screenHeight) || entity.isDestroyed()){
+            if (entity.isOffScreen(screenWidth, screenHeight)
+                || entity.isDestroyed()) {
+
                 System.out.println(
-                    "Removed via Generic Iterator: " + entity.getClass().getSimpleName()
+                    "Removed via Generic Iterator: "
+                        + entity.getClass().getSimpleName()
                 );
+
                 iterator.remove();
             }
         }
@@ -127,8 +185,18 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void dispose() {
+
         if (shapeRenderer != null) {
             shapeRenderer.dispose();
         }
+
+        if (spriteBatch != null) {
+            spriteBatch.dispose();
+        }
+
+        if (assetManager != null) {
+            assetManager.dispose();
+        }
     }
 }
+

@@ -9,11 +9,11 @@ import com.ahmadmadany.frontend.objects.Player;
 public class Boss extends Enemy {
 
     public Boss(String name, int hp) {
-        super(380f, 400f, 48f, 48f, Color.BLUE, name, hp, 5000L);
+        super(380f, 400f, 64f, 64f, Color.BLUE, name, hp, 5000L);
     }
 
     public Boss(float x, float y, String name, int hp) {
-        super(x, y, 48f, 48f, Color.BLUE, name, hp, 5000L);
+        super(x, y, 64f, 64f, Color.BLUE, name, hp, 5000L);
     }
 
     @Override

@@ -4,7 +4,10 @@ import com.ahmadmadany.frontend.objects.enemies.Enemy;
 import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.ahmadmadany.frontend.objects.bullets.Bullet;
+import com.ahmadmadany.frontend.systems.AssetManager;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
@@ -14,9 +17,10 @@ public class Player extends GameObject {
     private int power;
     private int spellCards;
     private long score;
+    private int 
 
     public Player(String name, int hp, int power, int spellCards) {
-        super(280f, 40f, 32f, 32f, 200f, Color.RED);
+        super(280f, 40f, 32f, 48f, 200f, Color.RED);
 
         this.name = name;
         this.hp = hp;
@@ -26,7 +30,7 @@ public class Player extends GameObject {
     }
 
     public Player(float x, float y, String name, int hp, int power, int spellCards) {
-        super(x, y, 32f, 32f, 200f, Color.RED);
+        super(x, y, 32f, 48f, 200f, Color.RED);
 
         this.name = name;
         this.hp = hp;

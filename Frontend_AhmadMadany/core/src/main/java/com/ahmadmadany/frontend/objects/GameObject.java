@@ -1,6 +1,10 @@
+
 package com.ahmadmadany.frontend.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
@@ -14,7 +18,13 @@ public abstract class GameObject implements Collidable {
     protected Color color;
     protected boolean active = true;
 
-    public GameObject(float x, float y, float width, float height, float speed, Color color) {
+    // Pre-CS6: Graphics and animation
+    protected TextureRegion sprite;
+    protected Animation<TextureRegion> animation;
+    protected float stateTime = 0f;
+
+    public GameObject(float x, float y, float width,
+                      float height, float speed, Color color) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -23,28 +33,32 @@ public abstract class GameObject implements Collidable {
         this.color = color;
     }
 
-    public float getX(){
+    // Position
+    public float getX() {
         return x;
     }
 
-    public void setX(float x){
+    public void setX(float x) {
         this.x = x;
     }
 
-    public float getY(){
+    public float getY() {
         return y;
     }
 
-    public void setY(float y){
+    public void setY(float y) {
         this.y = y;
     }
 
+    // Size
     public float getWidth() {
         return width;
     }
 
     public void setWidth(float width) {
-        if (width > 0) this.width = width;
+        if (width > 0) {
+            this.width = width;
+        }
     }
 
     public float getHeight() {
@@ -52,25 +66,32 @@ public abstract class GameObject implements Collidable {
     }
 
     public void setHeight(float height) {
-        if (height > 0) this.height = height;
+        if (height > 0) {
+            this.height = height;
+        }
     }
 
+    // Movement
     public float getSpeed() {
         return speed;
     }
 
     public void setSpeed(float speed) {
-        if (speed >= 0) this.speed = speed;
+        if (speed >= 0) {
+            this.speed = speed;
+        }
     }
 
-    public Color getColor(){
+    // Color
+    public Color getColor() {
         return color;
     }
 
-    public void setColor(Color color){
+    public void setColor(Color color) {
         this.color = color;
     }
 
+    // Object state
     public boolean isDestroyed() {
         return !active;
     }
@@ -86,12 +107,12 @@ public abstract class GameObject implements Collidable {
             y > screenHeight + 50;
     }
 
-    // Empty because not every GameObject needs automatic movement.
-    // Subclasses like Item can override this method when needed.
+    // Pre-CS6: Update animation time
     public void update(float delta) {
-
+        stateTime += delta;
     }
 
+    // Old rendering method (Module 3-5)
     public void render(ShapeRenderer shapeRenderer) {
         if (shapeRenderer != null && color != null && active) {
             shapeRenderer.setColor(color);
@@ -99,11 +120,51 @@ public abstract class GameObject implements Collidable {
         }
     }
 
+    // Pre-CS6: Render sprites and animations
+    public void render(SpriteBatch batch) {
+        if (batch != null && active) {
+            if (animation != null) {
+                TextureRegion currentFrame =
+                    animation.getKeyFrame(stateTime, true);
+
+                batch.draw(currentFrame, x, y, width, height);
+
+            } else if (sprite != null) {
+                batch.draw(sprite, x, y, width, height);
+            }
+        }
+    }
+
+    // Sprite getter and setter
+    public TextureRegion getSprite() {
+        return sprite;
+    }
+
+    public void setSprite(TextureRegion sprite) {
+        this.sprite = sprite;
+    }
+
+    // Animation getter and setter
+    public Animation<TextureRegion> getAnimation() {
+        return animation;
+    }
+
+    public void setAnimation(Animation<TextureRegion> animation) {
+        this.animation = animation;
+    }
+
+    // Animation timer getter
+    public float getStateTime() {
+        return stateTime;
+    }
+
+    // Core collision hitbox
     @Override
     public Rectangle getCoreHitbox() {
         return new Rectangle(x, y, width, height);
     }
 
+    // Graze hitbox
     @Override
     public Rectangle getGrazeHitbox() {
         return new Rectangle(
@@ -114,8 +175,9 @@ public abstract class GameObject implements Collidable {
         );
     }
 
+    // Base collision handler
     @Override
     public void onCollision(Collidable other) {
-        // Base collision handler (can be overridden by subclasses that need to react)
+        // Subclasses can override collision behavior.
     }
 }
