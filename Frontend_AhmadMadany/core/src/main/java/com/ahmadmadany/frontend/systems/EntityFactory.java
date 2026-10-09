@@ -79,6 +79,34 @@ public class EntityFactory {
         return item;
     }
 
+
+    // CS6 - Create Player Bullet with selected sprite
+    public static Bullet createPlayerBullet(
+        float x, float y, int damage, String spriteKey) {
+
+        TextureRegion sprite =
+            AssetManager.getInstance()
+                .getTextureRegion(spriteKey);
+
+        Bullet bullet = new Bullet(
+            x, y, BulletType.AMULET, damage
+        );
+
+        bullet.setSprite(sprite);
+
+        return bullet;
+    }
+
+    // CS6 - Create default Player Bullet
+    public static Bullet createPlayerBullet(
+        float x, float y, int damage) {
+
+        return createPlayerBullet(
+            x, y, damage, "bullet_amulet"
+        );
+    }
+
+
     // Factory: Create Enemy Bullet
     public static Bullet createEnemyBullet(
         float x, float y, int damage) {

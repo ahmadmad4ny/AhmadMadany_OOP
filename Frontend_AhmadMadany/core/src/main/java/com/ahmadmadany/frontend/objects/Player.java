@@ -5,6 +5,7 @@ import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.ahmadmadany.frontend.objects.bullets.Bullet;
 import com.ahmadmadany.frontend.systems.AssetManager;
+import com.ahmadmadany.frontend.systems.EntityFactory;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -17,7 +18,7 @@ public class Player extends GameObject {
     private int power;
     private int spellCards;
     private long score;
-    private int 
+    private int currentDir = 0;
 
     public Player(String name, int hp, int power, int spellCards) {
         super(280f, 40f, 32f, 48f, 200f, Color.RED);
@@ -75,26 +76,81 @@ public class Player extends GameObject {
         return name;
     }
 
+
+    @Override
     public void update(float delta) {
+        super.update(delta);
+
+        float dx = 0f;
+
         if (Gdx.input != null) {
             if (Gdx.input.isKeyPressed(Input.Keys.W) ||
-            Gdx.input.isKeyPressed(Input.Keys.UP)){
+                Gdx.input.isKeyPressed(Input.Keys.UP)) {
                 y += speed * delta;
             }
+
             if (Gdx.input.isKeyPressed(Input.Keys.S) ||
-                Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+                Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
                 y -= speed * delta;
             }
+
             if (Gdx.input.isKeyPressed(Input.Keys.A) ||
-                Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+                Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
                 x -= speed * delta;
+                dx -= speed * delta;
             }
+
             if (Gdx.input.isKeyPressed(Input.Keys.D) ||
-                Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+                Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
                 x += speed * delta;
+                dx += speed * delta;
+            }
+        }
+
+        updateAnimationState(dx);
+    }
+
+
+    public void updateAnimationState(float dx) {
+        AssetManager assets = AssetManager.getInstance();
+
+        if (dx < 0) {
+            if (currentDir != -1) {
+                currentDir = -1;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation("player_left");
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
+            }
+        } else if (dx > 0) {
+            if (currentDir != 1) {
+                currentDir = 1;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation("player_right");
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
+            }
+        } else {
+            if (currentDir != 0) {
+                currentDir = 0;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation("player_idle");
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
             }
         }
     }
+
+
 
     @Override
     public void onCollision(Collidable other) {
@@ -177,6 +233,7 @@ public class Player extends GameObject {
         item.destroy();
     }
 
+
     public Bullet shootBullet() {
         int damage = 10 + power;
 
@@ -184,11 +241,11 @@ public class Player extends GameObject {
             name + " shoots bullet dealing " + damage + " DMG!"
         );
 
-        return new Bullet(
+        return EntityFactory.createPlayerBullet(
             x + width / 2 - 4,
             y + height,
-            BulletType.AMULET,
             damage
         );
     }
+
 }

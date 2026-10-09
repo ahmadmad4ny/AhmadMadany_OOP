@@ -19,7 +19,7 @@ public class Bullet extends GameObject {
     }
 
     public Bullet(float x, float y, float speed, BulletType bulletType, int damage) {
-        super(x, y, 8, 16, speed, Color.YELLOW);
+        super(x, y, 16f, 16f, speed, Color.YELLOW);
 
         this.bulletType = bulletType;
         this.damage = damage;

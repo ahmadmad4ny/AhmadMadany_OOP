@@ -251,6 +251,26 @@ public class AssetManager {
             0, 4, 0.15f
         );
 
+
+        // Boss Moving Left
+        registerAnimationFromSheet(
+            "boss_left",
+            "rumia.png",
+            64, 64,
+            1, 0, 4, 0.15f,
+            Animation.PlayMode.REVERSED
+        );
+
+        // Boss Moving Right
+        registerAnimationFromSheet(
+            "boss_right",
+            "rumia.png",
+            64, 64,
+            2, 0, 4, 0.15f,
+            Animation.PlayMode.NORMAL
+        );
+
+
         // Fairy animations
         registerAnimationFromSheet(
             "fairy_idle",
@@ -273,6 +293,24 @@ public class AssetManager {
             32, 32,
             0, 4, 0.15f
         );
+
+
+        // CS6 - Player Bullet
+        registerRegionFromSheet(
+            "bullet_amulet",
+            "amulet_reimu.png",
+            16, 16,
+            0, 0
+        );
+
+        // CS6 - Homing Bullet
+        registerRegionFromSheet(
+            "bullet_amulet_homing",
+            "amulet_reimu.png",
+            16, 16,
+            1, 0
+        );
+
 
         // Enemy bullet (row 2, col 3)
         registerRegionFromSheet(
