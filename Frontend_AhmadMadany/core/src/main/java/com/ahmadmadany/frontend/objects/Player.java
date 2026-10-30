@@ -11,6 +11,9 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Rectangle;
+import com.ahmadmadany.frontend.systems.BulletManager;
+import com.ahmadmadany.frontend.objects.patterns.ShootingPattern;
 
 public class Player extends GameObject {
     private String name;
@@ -19,6 +22,7 @@ public class Player extends GameObject {
     private int spellCards;
     private long score;
     private int currentDir = 0;
+    private ShootingPattern shootingPattern;
 
     public Player(String name, int hp, int power, int spellCards) {
         super(280f, 40f, 32f, 48f, 200f, Color.RED);
@@ -150,7 +154,20 @@ public class Player extends GameObject {
         }
     }
 
+    @Override
+    public Rectangle getCoreHitbox() {
+        return new Rectangle(
+            x + (width / 2f) - 4f,
+            y + (height / 2f) - 4f,
+            8f,
+            8f
+        );
+    }
 
+    @Override
+    public Rectangle getGrazeHitbox() {
+        return new Rectangle(x, y, width, height);
+    }
 
     @Override
     public void onCollision(Collidable other) {
@@ -248,4 +265,37 @@ public class Player extends GameObject {
         );
     }
 
+    public void shootBullet(BulletManager bulletManager) {
+        if (bulletManager == null) {
+            return;
+        }
+
+        float muzzleX = x + width / 2f - 8f;
+        float muzzleY = y + height;
+
+        if (shootingPattern != null) {
+            shootingPattern.execute(
+                muzzleX,
+                muzzleY,
+                bulletManager,
+                true
+            );
+        } else {
+            bulletManager.spawnPlayerBullet(
+                muzzleX,
+                muzzleY,
+                0f,
+                400f,
+                10 + power
+            );
+        }
+    }
+
+    public ShootingPattern getShootingPattern() {
+        return shootingPattern;
+    }
+
+    public void setShootingPattern(ShootingPattern shootingPattern) {
+        this.shootingPattern = shootingPattern;
+    }
 }
