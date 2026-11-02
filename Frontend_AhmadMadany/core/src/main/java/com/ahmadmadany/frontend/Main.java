@@ -10,6 +10,8 @@ import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.ahmadmadany.frontend.systems.AssetManager;
 import com.ahmadmadany.frontend.systems.EntityFactory;
+import com.ahmadmadany.frontend.systems.BulletManager;
+import com.ahmadmadany.frontend.systems.CollisionReferee;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -23,6 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Main extends ApplicationAdapter {
+
+    private BulletManager bulletManager;
+    private CollisionReferee collisionReferee;
+    private float enemyShootTimer = 0f;
 
     private ShapeRenderer shapeRenderer;
     private SpriteBatch spriteBatch;
@@ -38,6 +44,9 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
+
+        bulletManager = new BulletManager();
+        collisionReferee = new CollisionReferee();
 
         shapeRenderer = new ShapeRenderer();
         spriteBatch = new SpriteBatch();
@@ -89,6 +98,15 @@ public class Main extends ApplicationAdapter {
         entities.add(powerItem);
     }
 
+    private void updateEnemyScheduler(float delta) {
+        enemyShootTimer += delta;
+
+        if (enemyShootTimer >= 1.5f) {
+            boss.shootBullet(bulletManager);
+            enemyShootTimer = 0f;
+        }
+    }
+
     @Override
     public void render() {
 
@@ -96,8 +114,10 @@ public class Main extends ApplicationAdapter {
 
         // Shoot using Z
         if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
-            entities.add(player.shootBullet());
+            player.shootBullet(bulletManager);
         }
+
+        updateEnemyScheduler(delta);
 
         // Update and clean entities
         updateAndClean(
@@ -107,21 +127,13 @@ public class Main extends ApplicationAdapter {
             Gdx.graphics.getHeight()
         );
 
-        // Collision detection
-        for (int i = 0; i < entities.size(); i++) {
-            for (int j = i + 1; j < entities.size(); j++) {
+        bulletManager.update(
+            delta,
+            Gdx.graphics.getWidth(),
+            Gdx.graphics.getHeight()
+        );
 
-                GameObject a = entities.get(i);
-                GameObject b = entities.get(j);
-
-                if (!a.isDestroyed() && !b.isDestroyed()) {
-                    if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
-                        a.onCollision(b);
-                        b.onCollision(a);
-                    }
-                }
-            }
-        }
+        collisionReferee.resolveCollisions(player, entities, bulletManager);
 
         // Clear screen
         ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
@@ -151,6 +163,8 @@ public class Main extends ApplicationAdapter {
                 entity.render(spriteBatch);
             }
         }
+
+        bulletManager.render(spriteBatch);
 
         spriteBatch.end();
     }
