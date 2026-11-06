@@ -32,23 +32,12 @@ public class CollisionReferee {
                 if (entity instanceof Enemy enemy && !enemy.isDestroyed()) {
 
                     if (bullet.getCoreHitbox().overlaps(enemy.getCoreHitbox())) {
-
-                        boolean defeated = enemy.takeDamage(bullet.getDamage());
-
-                        if (defeated) {
-                            player.addScore(enemy.getScoreValue());
-
-                            newDrops.add(
-                                EntityFactory.createItem(
-                                    enemy.getX(),
-                                    enemy.getY(),
-                                    ItemType.POWER
-                                )
-                            );
+                        if (!player.isInvulnerable()){
+                            System.out.println("[CollisionReferee] CORE HIT! Enemy Bullet hit " + player.getName() + " for " + bullet.getDamage() + " DMG!");
+                            player.takeDamage(100, bulletManager, entities);
+                            bullet.destroy();
+                            break;
                         }
-
-                        bullet.destroy();
-                        break;
                     }
                 }
             }
@@ -69,7 +58,7 @@ public class CollisionReferee {
                     && bullet.getCoreHitbox().overlaps(player.getGrazeHitbox())) {
 
                     bullet.setGrazed(true);
-                    player.addScore(50);
+                    player.addGraze();
 
                     System.out.println(
                         "[CollisionReferee] GRAZE! " +
@@ -97,7 +86,10 @@ public class CollisionReferee {
             } else if (entity instanceof Enemy enemy) {
 
                 if (player.getCoreHitbox().overlaps(enemy.getCoreHitbox())) {
-                    player.takeDamage(10);
+                    if (!player.isInvulnerable()){
+                        System.out.println("[CollisionReferee] CORE COLLISION! Player collided with " + enemy.getName() + "!");
+                        player.takeDamage(100, bulletManager, entities);
+                    }
                 }
             }
         }

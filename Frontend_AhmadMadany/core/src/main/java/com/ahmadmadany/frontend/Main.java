@@ -1,6 +1,7 @@
 
 package com.ahmadmadany.frontend;
 
+import com.ahmadmadany.frontend.commands.Command;
 import com.ahmadmadany.frontend.objects.GameObject;
 import com.ahmadmadany.frontend.objects.Player;
 import com.ahmadmadany.frontend.objects.enemies.Boss;
@@ -12,6 +13,8 @@ import com.ahmadmadany.frontend.systems.AssetManager;
 import com.ahmadmadany.frontend.systems.EntityFactory;
 import com.ahmadmadany.frontend.systems.BulletManager;
 import com.ahmadmadany.frontend.systems.CollisionReferee;
+import com.ahmadmadany.frontend.commands.InputHandler;
+import com.ahmadmadany.frontend.ui.GameHUD;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -28,6 +31,8 @@ public class Main extends ApplicationAdapter {
 
     private BulletManager bulletManager;
     private CollisionReferee collisionReferee;
+    private InputHandler inputHandler;
+    private GameHUD gameHUD;
     private float enemyShootTimer = 0f;
 
     private ShapeRenderer shapeRenderer;
@@ -48,6 +53,9 @@ public class Main extends ApplicationAdapter {
         bulletManager = new BulletManager();
         collisionReferee = new CollisionReferee();
 
+        inputHandler = new InputHandler();
+        gameHUD = new GameHUD();
+
         shapeRenderer = new ShapeRenderer();
         spriteBatch = new SpriteBatch();
 
@@ -60,13 +68,15 @@ public class Main extends ApplicationAdapter {
 
         // Create player using Factory Pattern
         player = EntityFactory.createPlayer(
-            280f,
-            40f,
+            200f,
+            50f,
             "Reimu Hakurei",
             100,
             15,
             3
         );
+
+        player.registerObserver(gameHUD);
 
         Fairy redFairy = EntityFactory.createFairy(
             150f, 380f, "Red Fairy", 20
@@ -80,15 +90,15 @@ public class Main extends ApplicationAdapter {
         fairies.add(blueFairy);
 
         boss = EntityFactory.createBoss(
-            380f, 400f, "Rumia", 150
+            250f, 400f, "Rumia", 150
         );
 
         powerItem = EntityFactory.createItem(
-            200f, 450f, ItemType.POWER
+            180f, 450f, ItemType.POWER
         );
 
         pointItem = EntityFactory.createItem(
-            320f, 480f, ItemType.POINT
+            220f, 480f, ItemType.POINT
         );
 
         entities.add(player);
@@ -96,6 +106,8 @@ public class Main extends ApplicationAdapter {
         entities.add(boss);
         entities.add(pointItem);
         entities.add(powerItem);
+
+        inputHandler.setEntities(entities);
     }
 
     private void updateEnemyScheduler(float delta) {
@@ -107,15 +119,42 @@ public class Main extends ApplicationAdapter {
         }
     }
 
+    private void restartGame() {
+        System.out.println("[Main] Restarting game...");
+
+        entities.clear();
+        bulletManager.clearEnemyBullets();
+        bulletManager.clearPlayerBullets();
+
+        entities.add(player);
+        player.resetGame();
+
+        fairies.clear();
+        fairies.add(EntityFactory.createFairy(150, 380, "Red Fairy", 20));
+        fairies.add(EntityFactory.createFairy(250, 380, "Blue Fairy", 20, "fairy_idle_blue"));
+
+        boss = EntityFactory.createBoss(250, 400, "Rumia", 150);
+        powerItem = EntityFactory.createItem(180, 450, ItemType.POWER);
+        pointItem = EntityFactory.createItem(220, 480, ItemType.POINT);
+
+        entities.addAll(fairies);
+        entities.add(boss);
+        entities.add(powerItem);
+        entities.add(pointItem);
+    }
+
+
     @Override
     public void render() {
 
         float delta = Gdx.graphics.getDeltaTime();
 
-        // Shoot using Z
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
-            player.shootBullet(bulletManager);
+        List<Command> commands = inputHandler.handleInput(delta);
+
+        for (Command command : commands) {
+            command.execute(player, bulletManager);
         }
+        player.clampToPlayfield();
 
         updateEnemyScheduler(delta);
 

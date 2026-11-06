@@ -2,6 +2,9 @@ package com.ahmadmadany.frontend.systems;
 
 import com.ahmadmadany.frontend.objects.bullets.Bullet;
 import com.ahmadmadany.frontend.objects.enemies.Enemy;
+import com.ahmadmadany.frontend.objects.GameObject;
+import com.ahmadmadany.frontend.objects.items.Item;
+import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.ahmadmadany.frontend.objects.BulletType;
 
@@ -61,7 +64,7 @@ public class BulletManager {
             x, y, vx, vy,
             BulletType.DANMAKU,
             damage,
-            true
+            false
         );
 
         activeEnemyBullets.add(bullet);
@@ -103,6 +106,42 @@ public class BulletManager {
                 enemyBulletPool.offer(bullet);
             }
         }  // - Enemy bullets that go off-screen or are destroyed are returned to enemyBulletPool via offer()
+    }
+
+    public void clearEnemyBullets(List<GameObject> entities) {
+        Iterator<Bullet> iterator = activeEnemyBullets.iterator();
+
+        while (iterator.hasNext()) {
+            Bullet bullet = iterator.next();
+
+            if (entities != null) {
+                Item item = EntityFactory.createItem(
+                    bullet.getX(),
+                    bullet.getY(),
+                    ItemType.POINT
+                );
+                entities.add(item);
+            }
+
+            bullet.destroy();
+            iterator.remove();
+            enemyBulletPool.offer(bullet);
+        }
+    }
+
+    public void clearEnemyBullets() {
+        clearEnemyBullets(null);
+    }
+
+    public void clearPlayerBullets() {
+        Iterator<Bullet> pIter = activePlayerBullets.iterator();
+
+        while (pIter.hasNext()) {
+            Bullet bullet = pIter.next();
+            bullet.destroy();
+            pIter.remove();
+            playerBulletPool.offer(bullet);
+        }
     }
 
     public void render(SpriteBatch batch) {
