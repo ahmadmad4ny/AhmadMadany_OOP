@@ -320,6 +320,13 @@ public class AssetManager {
             2, 3
         );
 
+        // Pre-CS9 - Colored Danmaku Bullets
+        registerRegionFromSheet("bullet_danmaku_blue", "bullets_small.png", 16, 16, 2, 3);
+        registerRegionFromSheet("bullet_danmaku_red", "bullets_small.png", 16, 16, 2, 6);
+        registerRegionFromSheet("bullet_danmaku_purple", "bullets_small.png", 16, 16, 2, 4);
+        registerRegionFromSheet("bullet_danmaku_orange", "bullets_small.png", 16, 16, 2, 15);
+        registerRegionFromSheet("bullet_danmaku_green", "bullets_small.png", 16, 16, 2, 10);
+
         // Item variants
         registerRegionFromSheet(
             "item_power",

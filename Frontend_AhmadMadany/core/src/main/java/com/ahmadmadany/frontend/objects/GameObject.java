@@ -87,6 +87,14 @@ public abstract class GameObject implements Collidable {
         return color;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) { this.active = active; }
+
+    public void setStateTime(float stateTime) { this.stateTime = stateTime; }
+
     public void setColor(Color color) {
         this.color = color;
     }

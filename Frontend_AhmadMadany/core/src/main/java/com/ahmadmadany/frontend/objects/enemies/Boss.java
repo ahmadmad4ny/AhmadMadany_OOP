@@ -6,16 +6,19 @@ import com.ahmadmadany.frontend.objects.Player;
 import com.ahmadmadany.frontend.objects.patterns.ShootingPattern;
 import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.SpreadShot;
 import com.ahmadmadany.frontend.systems.BulletManager;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.SpreadShot;
+import com.ahmadmadany.frontend.objects.patterns.entityStrategy.FixedMovement;
 
 
 
 public class Boss extends Enemy {
 
-    private ShootingPattern shootingPattern =
-        new SpreadShot(200f, 3, 30f);
-
     public Boss(String name, int hp) {
         super(380f, 400f, 64f, 64f, Color.BLUE, name, hp, 5000L);
+        setShootingPattern(new SpreadShot(220f, 5, 25f, 10, player, "bullet_danmaku_red"));
+    }
+
+    private void setShootingPattern(SpreadShot bulletDanmakuRed) {
     }
 
     public Boss(float x, float y, String name, int hp) {
@@ -28,29 +31,6 @@ public class Boss extends Enemy {
             System.out.println("Player touches boss");
         }
     }
-
-    public void shootBullet(BulletManager bulletManager) {
-        if (bulletManager != null &&
-            shootingPattern != null &&
-            !isDestroyed()) {
-
-            shootingPattern.execute(
-                x + width / 2f - 8f,
-                y,
-                bulletManager,
-                false
-            );
-        }
-    }
-
-    public ShootingPattern getShootingPattern() {
-        return shootingPattern;
-    }
-
-    public void setShootingPattern(ShootingPattern shootingPattern) {
-        this.shootingPattern = shootingPattern;
-    }
-
 
 }
 

@@ -208,7 +208,7 @@ public class Player extends GameObject {
         clampToPlayfield();
     }
 
-    private void clampToPlayfield() {
+    public void clampToPlayfield() {
         float minX = 32f;
         float maxX = 416f - width;
         float minY = 16f;

@@ -1,5 +1,6 @@
 package com.ahmadmadany.frontend.objects.bullets;
 
+import com.ahmadmadany.frontend.objects.patterns.bulletStrategy.BulletMovementPattern;
 import com.ahmadmadany.frontend.objects.BulletType;
 import com.ahmadmadany.frontend.objects.GameObject;
 import com.ahmadmadany.frontend.objects.Collidable;
@@ -16,6 +17,7 @@ public class Bullet extends GameObject {
     private float angle = 90f;
     private boolean isPlayerBullet;
     private boolean grazed;
+    private BulletMovementPattern movementPattern;
 
 
 
@@ -57,6 +59,8 @@ public class Bullet extends GameObject {
         this.vx = vx;
         this.vy = vy;
 
+        this.movementPattern = null;
+
         this.angle = (float) Math.toDegrees(Math.atan2(vy, vx));
         this.speed = (float) Math.hypot(vx, vy);
 
@@ -88,8 +92,13 @@ public class Bullet extends GameObject {
     public void update(float delta) {
         super.update(delta);
 
-        x += vx * delta;
-        y += vy * delta;
+        if (movementPattern != null) {
+            movementPattern.move(this, delta);
+        } else {
+            x += vx * delta;
+            y += vy * delta;
+        }
+
     }
 
 
@@ -148,6 +157,14 @@ public class Bullet extends GameObject {
 
     public void setGrazed(boolean grazed) {
         this.grazed = grazed;
+    }
+
+    public BulletMovementPattern getMovementPattern() {
+        return movementPattern;
+    }
+
+    public void setMovementPattern(BulletMovementPattern movementPattern) {
+        this.movementPattern = movementPattern;
     }
 
 }

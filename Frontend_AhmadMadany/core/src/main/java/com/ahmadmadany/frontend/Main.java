@@ -149,6 +149,13 @@ public class Main extends ApplicationAdapter {
 
         float delta = Gdx.graphics.getDeltaTime();
 
+        if (Gdx.input != null &&
+            Gdx.input.isKeyJustPressed(Input.Keys.R) &&
+            player.isGameOver()) {
+
+            restartGame();
+        }
+
         List<Command> commands = inputHandler.handleInput(delta);
 
         for (Command command : commands) {
@@ -162,14 +169,14 @@ public class Main extends ApplicationAdapter {
         updateAndClean(
             entities,
             delta,
-            Gdx.graphics.getWidth(),
-            Gdx.graphics.getHeight()
+            416,
+            560
         );
 
         bulletManager.update(
             delta,
-            Gdx.graphics.getWidth(),
-            Gdx.graphics.getHeight()
+            416,
+            560
         );
 
         collisionReferee.resolveCollisions(player, entities, bulletManager);
@@ -204,6 +211,7 @@ public class Main extends ApplicationAdapter {
         }
 
         bulletManager.render(spriteBatch);
+        gameHUD.render(spriteBatch);
 
         spriteBatch.end();
     }
@@ -238,6 +246,10 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void dispose() {
+
+        if (gameHUD != null) {
+            gameHUD.dispose();
+        }
 
         if (shapeRenderer != null) {
             shapeRenderer.dispose();

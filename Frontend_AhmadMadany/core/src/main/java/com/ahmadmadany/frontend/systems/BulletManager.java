@@ -7,6 +7,7 @@ import com.ahmadmadany.frontend.objects.items.Item;
 import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.ahmadmadany.frontend.objects.BulletType;
+import com.ahmadmadany.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
 
 import java.util.Queue;
 import java.util.LinkedList;
@@ -21,6 +22,7 @@ public class BulletManager {
 
     private List<Bullet> activePlayerBullets;
     private List<Bullet> activeEnemyBullets;
+    private List<GameObject> entities;
 
     public BulletManager() {
         playerBulletPool = new LinkedList<>();
@@ -31,46 +33,43 @@ public class BulletManager {
     }
 
     public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
-        Bullet bullet;
-
-        if (!playerBulletPool.isEmpty()){
-            bullet = playerBulletPool.poll();
-        } else {
-            bullet = EntityFactory.createPlayerBullet(x, y, damage);
-        }
-
-        bullet.init(
-            x, y, vx, vy,
-            BulletType.AMULET,
-            damage,
-            true
-        );
-
-        activePlayerBullets.add(bullet);
-
-        return bullet;
+        return spawnPlayerBullet(x, y, vx, vy, damage, "bullet_amulet");
     }
 
     public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
+        return spawnEnemyBullet(x, y, vx, vy, damage, "bullet_danmaku");
+    }
+
+    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Add String spriteKey as a parameter
+        String key = (spriteKey != null) ? spriteKey : "bullet_amulet"; // Add local String variable key
         Bullet bullet;
-
-        if(!enemyBulletPool.isEmpty()){
-            bullet = enemyBulletPool.poll();
+        if (!playerBulletPool.isEmpty()) {
+            bullet = playerBulletPool.poll();
+            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
+            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Add setSprite using key
         } else {
-            bullet = EntityFactory.createEnemyBullet(x, y, damage);
+            bullet = EntityFactory.createPlayerBullet(x, y, damage, key); // Add key as 4th argument
+            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
         }
-
-        bullet.init(
-            x, y, vx, vy,
-            BulletType.DANMAKU,
-            damage,
-            false
-        );
-
-        activeEnemyBullets.add(bullet);
-
+        activePlayerBullets.add(bullet);
         return bullet;
     }
+
+    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Add String spriteKey as a parameter
+        String key = (spriteKey != null) ? spriteKey : "bullet_danmaku"; // Add local String variable key
+        Bullet bullet;
+        if (!enemyBulletPool.isEmpty()) {
+            bullet = enemyBulletPool.poll();
+            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
+            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Add setSprite using key
+        } else {
+            bullet = EntityFactory.createEnemyBullet(x, y, damage, key); // Add key as 4th argument
+            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
+        }
+        activeEnemyBullets.add(bullet);
+        return bullet;
+    }
+
 
     public void update(float delta, float screenWidth, float screenHeight) {
         Iterator<Bullet> playerIterator = activePlayerBullets.iterator();
@@ -78,6 +77,10 @@ public class BulletManager {
         while (playerIterator.hasNext()) {
 
             Bullet bullet = playerIterator.next();
+
+            if (entities != null && bullet.getMovementPattern() instanceof HomingBulletMovement homing && homing.getEntities() == null) {
+                homing.setEntities(entities);
+            }
 
             bullet.update(delta);
 
@@ -173,4 +176,7 @@ public class BulletManager {
     public int getEnemyPoolSize() {
         return enemyBulletPool.size();
     }
+
+    public List<GameObject> getEntities() { return entities; }
+    public void setEntities(List<GameObject> entities) { this.entities = entities; }
 }
