@@ -7,9 +7,11 @@ import com.ahmadmadany.frontend.objects.Collidable;
 import com.ahmadmadany.frontend.objects.enemies.Enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Bullet extends GameObject {
 
+    private static final float PLAYER_SHOT_HITBOX = 12f;
     private BulletType bulletType;
     private int damage;
     private float vx;
@@ -121,6 +123,13 @@ public class Bullet extends GameObject {
         }
     }
 
+
+    public Rectangle getShotHitbox() {
+        if (!isPlayerBullet) return getCoreHitbox();
+        return new Rectangle(x + (width - PLAYER_SHOT_HITBOX) / 2f,
+            y + (height - PLAYER_SHOT_HITBOX) / 2f,
+            PLAYER_SHOT_HITBOX, PLAYER_SHOT_HITBOX);
+    }
 
     public BulletType getBulletType() {
         return bulletType;

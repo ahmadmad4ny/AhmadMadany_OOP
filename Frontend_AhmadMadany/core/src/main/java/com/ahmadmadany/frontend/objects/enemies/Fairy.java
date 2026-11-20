@@ -18,12 +18,14 @@ public class Fairy extends Enemy {
         super(150f, 380f, 24f, 24f, Color.PINK, name, hp, 500L);
         setShootingPattern(new FrontShot(150f, 10));
         setMovementPattern(new LinearEntityMovement(0f, -40f));
+        setShotHitboxSize(28f, 28f);
     }
 
     public Fairy(float x, float y, String name, int hp) {
         super(x, y, 24f, 24f, Color.PINK, name, hp, 500L);
         setShootingPattern(new FrontShot(150f, 10));
         setMovementPattern(new LinearEntityMovement(0f, -40f));
+        setShotHitboxSize(28f, 28f);
     }
 
     public Fairy(float x, float y, String name, int hp, float shootDelay, float shootInterval, int maxShots) {

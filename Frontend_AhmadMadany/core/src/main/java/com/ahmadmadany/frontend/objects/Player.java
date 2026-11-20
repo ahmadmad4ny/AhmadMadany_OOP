@@ -232,7 +232,7 @@ public class Player extends EntityShooter {
         float minX = 32f;
         float maxX = 416f - width;
         float minY = 16f;
-        float maxY = 560f - height;
+        float maxY = 464f - height;
 
         x = Math.max(minX, Math.min(x, maxX));
         y = Math.max(minY, Math.min(y, maxY));
@@ -335,7 +335,7 @@ public class Player extends EntityShooter {
     public void resetGame() {
         this.lives = 3;
         this.hp = 100;
-        this.power = 15;
+        this.power = 0;
         updatePowerStrategy();
         this.spellCards = 3;
         this.score = 0;

@@ -3,6 +3,7 @@ package com.ahmadmadany.backend.service;
 import com.ahmadmadany.backend.model.Score;
 import com.ahmadmadany.backend.repository.ScoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class ScoreService {
     }
 
     public List<Score> getLeaderboard(Integer limit) {
-        return scoreRepository.findTopScores(limit);
+        return scoreRepository.findTopScores(PageRequest.of(0, Math.max(1, Math.min(100, limit == null ? 10 : limit))));
     }
 
     public void deleteScore(UUID scoreId) {
