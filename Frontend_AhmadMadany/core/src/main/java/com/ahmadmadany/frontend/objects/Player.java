@@ -17,11 +17,17 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.ahmadmadany.frontend.systems.BulletManager;
 import com.ahmadmadany.frontend.objects.patterns.ShootingPattern;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.FrontShot;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.SpreadShot;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.SideShot;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.CompositeShootingPattern;
+import com.ahmadmadany.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
+import com.ahmadmadany.frontend.objects.patterns.entityStrategy.FixedMovement;
 import java.util.List;
 import java.util.ArrayList;
 
 
-public class Player extends GameObject {
+public class Player extends EntityShooter {
     private String name;
     private int hp;
     private int power;
@@ -30,32 +36,39 @@ public class Player extends GameObject {
     private int lives = 3;
     private int grazeCount = 0;
     private boolean focused = false;
-    private float shootTimer = 0.1f;
-    private float shootCooldown = 0.1f;
+    private float shootCooldown = 5f / 60f;
+    private float shootTimer = shootCooldown;
+    private float homingCooldown = 30f / 60f;
+    private float homingShootTimer = homingCooldown;
+    private ShootingPattern mainShootingPattern;
+    private ShootingPattern sideShootingPattern;
     private float invulnerableTimer = 0f;
     private int currentDir = 0;
-    private ShootingPattern shootingPattern;
 
     private final  List<GameObserver> observers = new ArrayList<>();
 
     public Player(String name, int hp, int power, int spellCards) {
-        super(280f, 40f, 32f, 48f, 200f, Color.RED);
+        super(280f, 40f, 32f, 48f, 240f, Color.RED);
 
         this.name = name;
         this.hp = hp;
         this.power = power;
         this.spellCards = spellCards;
         this.score = 0;
+        setMovementPattern(new FixedMovement());
+        updatePowerStrategy();
     }
 
     public Player(float x, float y, String name, int hp, int power, int spellCards) {
-        super(x, y, 32f, 48f, 200f, Color.RED);
+        super(x, y, 32f, 48f, 240f, Color.RED);
 
         this.name = name;
         this.hp = hp;
         this.power = power;
         this.spellCards = spellCards;
         this.score = 0;
+        setMovementPattern(new FixedMovement());
+        updatePowerStrategy();
     }
 
     public int getHp() {
@@ -75,7 +88,9 @@ public class Player extends GameObject {
     }
 
     public void setPower(int power) {
-        this.power = power; notifyPowerChanged();
+        this.power = Math.max(0, Math.min(128, power));
+        updatePowerStrategy();
+        notifyPowerChanged();
     }
 
     public int getSpellCards() {
@@ -152,6 +167,11 @@ public class Player extends GameObject {
         super.update(delta);
 
         shootTimer += delta;
+        homingShootTimer += delta;
+        if (shootTimer > 0.15f) {
+            shootTimer = shootCooldown;
+            homingShootTimer = homingCooldown;
+        }
 
         if (invulnerableTimer > 0f) {
             invulnerableTimer -= delta;
@@ -304,6 +324,7 @@ public class Player extends GameObject {
         this.hp = 100;
         this.invulnerableTimer = 3.0f;
         this.power = Math.max(10, this.power - 16);
+        updatePowerStrategy();
         this.spellCards = 3;
 
         notifyHpChanged();
@@ -315,6 +336,7 @@ public class Player extends GameObject {
         this.lives = 3;
         this.hp = 100;
         this.power = 15;
+        updatePowerStrategy();
         this.spellCards = 3;
         this.score = 0;
         this.grazeCount = 0;
@@ -379,7 +401,8 @@ public class Player extends GameObject {
         if (type != null) {
             switch (type) {
                 case POWER -> {
-                    this.power += type.getPowerBonus();
+                    this.power = Math.min(128, this.power + type.getPowerBonus());
+                    updatePowerStrategy();
                     notifyPowerChanged();
                     addScore(item.getScoreValue());
 
@@ -437,58 +460,113 @@ public class Player extends GameObject {
         );
     }
 
+    @Override
     public void shootBullet(BulletManager bulletManager) {
-        if (bulletManager == null) {
-            return;
-        }
-
+        if (bulletManager == null || !isAlive()) return;
+        float originX = x + width / 2f - 8f;
+        float originY = y + height;
         if (shootTimer >= shootCooldown) {
-            float muzzleX = x + width / 2f - 8f;
-            float muzzleY = y + height;
-
-            if (shootingPattern != null) {
-                shootingPattern.execute(
-                    muzzleX,
-                    muzzleY,
-                    bulletManager,
-                    true
-                );
+            if (mainShootingPattern != null) {
+                mainShootingPattern.execute(originX, originY, bulletManager, true);
+            } else if (shootingPattern != null) {
+                shootingPattern.execute(originX, originY, bulletManager, true);
             } else {
-                bulletManager.spawnPlayerBullet(
-                    muzzleX,
-                    muzzleY,
-                    0f,
-                    400f,
-                    10 + power
-                );
+                bulletManager.spawnPlayerBullet(originX, originY, 0f, 400f, 10 + power);
             }
-
             shootTimer = 0f;
         }
+        if (sideShootingPattern != null && homingShootTimer >= homingCooldown) {
+            sideShootingPattern.execute(originX, originY, bulletManager, true);
+            homingShootTimer = 0f;
+        }
     }
 
-    public ShootingPattern getShootingPattern() {
-        return shootingPattern;
+    public ShootingPattern getMainShootingPattern() { return mainShootingPattern; }
+    public ShootingPattern getSideShootingPattern() { return sideShootingPattern; }
+    public float getShootCooldown() { return shootCooldown; }
+    public float getHomingCooldown() { return homingCooldown; }
+
+    private SideShot homingSide(float speed, int damage, float h, float v, float left, float right) {
+        return new SideShot(speed, damage, h, v, left, right, true,
+            new HomingBulletMovement(360f), "bullet_amulet_homing");
     }
 
-    public void setShootingPattern(ShootingPattern shootingPattern) {
-        this.shootingPattern = shootingPattern;
+    public void updatePowerStrategy() {
+        float spreadAngle = focused ? 4f : 18f;
+        float dualSpreadAngle = focused ? 3f : 12f;
+        float sideHOffset = focused ? 8f : 24f;
+        float sideVOffset = focused ? 16f : -16f;
+        float leftAngle = focused ? 100f : 120f;
+        float rightAngle = focused ? 80f : 60f;
+        float normalSpeed = 720f;
+        float homingSpeed = 500f;
+
+        if (power < 8) {
+            mainShootingPattern = new FrontShot(normalSpeed, 48);
+            sideShootingPattern = null;
+            homingCooldown = 30f / 60f;
+        } else if (power < 16) {
+            mainShootingPattern = new FrontShot(normalSpeed, 48);
+            sideShootingPattern = homingSide(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle);
+            homingCooldown = 30f / 60f;
+        } else if (power < 32) {
+            mainShootingPattern = new SpreadShot(normalSpeed, 2, dualSpreadAngle, 30, 8f, null, null, null);
+            sideShootingPattern = homingSide(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle);
+            homingCooldown = 30f / 60f;
+        } else if (power < 48) {
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
+            sideShootingPattern = homingSide(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle);
+            homingCooldown = 30f / 60f;
+        } else if (power < 64) {
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
+            sideShootingPattern = homingSide(homingSpeed, 12, sideHOffset, sideVOffset, leftAngle, rightAngle);
+            homingCooldown = 15f / 60f;
+        } else if (power < 80) {
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
+            sideShootingPattern = new CompositeShootingPattern(
+                homingSide(homingSpeed, 9, sideHOffset, sideVOffset, leftAngle, rightAngle),
+                homingSide(homingSpeed, 12, sideHOffset + 4f, sideVOffset, leftAngle + 30f, rightAngle - 30f));
+            homingCooldown = 15f / 60f;
+        } else if (power < 128) {
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
+            sideShootingPattern = new CompositeShootingPattern(
+                homingSide(homingSpeed, 8, sideHOffset, sideVOffset, leftAngle - 10f, rightAngle + 10f),
+                homingSide(homingSpeed, 8, sideHOffset + 4f, sideVOffset, leftAngle + 10f, rightAngle - 10f));
+            homingCooldown = 15f / 60f;
+        } else {
+            mainShootingPattern = new SpreadShot(normalSpeed, 4, spreadAngle * 1.2f, 24, 16f, null, null, null);
+            sideShootingPattern = new CompositeShootingPattern(
+                homingSide(homingSpeed, 8, sideHOffset, sideVOffset, leftAngle - 10f, rightAngle + 10f),
+                homingSide(homingSpeed, 8, sideHOffset + 4f, sideVOffset, leftAngle + 10f, rightAngle - 10f),
+                homingSide(homingSpeed, 8, sideHOffset + 8f, sideVOffset, leftAngle + 30f, rightAngle - 30f));
+            homingCooldown = 15f / 60f;
+        }
+        if (sideShootingPattern != null) {
+            setShootingPattern(new CompositeShootingPattern(mainShootingPattern, sideShootingPattern));
+        } else {
+            setShootingPattern(mainShootingPattern);
+        }
     }
 
     public void useBomb(BulletManager bulletManager, List<GameObject> entities) {
-        if (spellCards > 0) {
-            spellCards--;
-            notifySpellCardsChanged();
-            invulnerableTimer = 5.0f;
-
-            if (bulletManager != null) {
-                bulletManager.clearEnemyBullets(entities);
+        if (spellCards <= 0 || isGameOver()) return;
+        spellCards--;
+        notifySpellCardsChanged();
+        invulnerableTimer = 5.0f;
+        if (bulletManager != null) {
+            bulletManager.clearEnemyBullets(entities);
+            GameObject target = null;
+            if (entities != null) {
+                for (GameObject obj : entities) {
+                    if (obj instanceof Enemy enemy && !enemy.isDestroyed()) {
+                        target = enemy;
+                        break;
+                    }
+                }
             }
-
-            System.out.println(name + " unleashes SPELL CARD (Fantasy Seal)! All enemy bullets cleared!");
-        } else {
-            System.out.println("No Spell Cards (Bombs) remaining!");
+            bulletManager.spawnBombOrbs(x + width / 2f, y + height / 2f, target, entities);
         }
+        System.out.println(name + " unleashes SPELL CARD: Fantasy Seal!");
     }
 
     public void useBomb(BulletManager bulletManager) {
@@ -549,7 +627,10 @@ public class Player extends GameObject {
     }
 
     public void setFocused(boolean focused) {
-        this.focused = focused;
+        if (this.focused != focused) {
+            this.focused = focused;
+            updatePowerStrategy();
+        }
     }
 
     public int getGrazeCount() {

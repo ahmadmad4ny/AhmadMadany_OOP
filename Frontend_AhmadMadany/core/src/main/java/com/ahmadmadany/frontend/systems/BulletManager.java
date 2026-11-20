@@ -8,6 +8,8 @@ import com.ahmadmadany.frontend.objects.items.ItemType;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.ahmadmadany.frontend.objects.BulletType;
 import com.ahmadmadany.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
+import com.ahmadmadany.frontend.objects.patterns.bulletStrategy.FantasySealMovement;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.RingShot;
 
 import java.util.Queue;
 import java.util.LinkedList;
@@ -70,6 +72,18 @@ public class BulletManager {
         return bullet;
     }
 
+
+    public void spawnBombOrbs(float originX, float originY, GameObject targetEnemy, List<GameObject> entities) {
+        List<GameObject> targetEntities = entities != null ? entities : this.entities;
+        RingShot ring = new RingShot(150f, 8, 35,
+            new FantasySealMovement(targetEnemy, targetEntities));
+        ring.execute(originX, originY, this, true);
+        System.out.println("[BulletManager] Spawned 8 Fantasy Seal orbs!");
+    }
+
+    public void spawnBombOrbs(float originX, float originY, GameObject targetEnemy) {
+        spawnBombOrbs(originX, originY, targetEnemy, null);
+    }
 
     public void update(float delta, float screenWidth, float screenHeight) {
         Iterator<Bullet> playerIterator = activePlayerBullets.iterator();

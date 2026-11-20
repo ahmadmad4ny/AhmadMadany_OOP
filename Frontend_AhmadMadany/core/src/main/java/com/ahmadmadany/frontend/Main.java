@@ -13,6 +13,10 @@ import com.ahmadmadany.frontend.systems.AssetManager;
 import com.ahmadmadany.frontend.systems.EntityFactory;
 import com.ahmadmadany.frontend.systems.BulletManager;
 import com.ahmadmadany.frontend.systems.CollisionReferee;
+import com.ahmadmadany.frontend.objects.patterns.entityStrategy.TargetPointMovement;
+import com.ahmadmadany.frontend.objects.patterns.entityStrategy.SCurveMovement;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.SpreadShot;
+import com.ahmadmadany.frontend.objects.patterns.shootingStrategy.AlternatingRingShot;
 import com.ahmadmadany.frontend.commands.InputHandler;
 import com.ahmadmadany.frontend.ui.GameHUD;
 
@@ -34,6 +38,10 @@ public class Main extends ApplicationAdapter {
     private InputHandler inputHandler;
     private GameHUD gameHUD;
     private float enemyShootTimer = 0f;
+    private float phaseTimer = 0f;
+    private int currentPhase = 0;
+    private float waveTimer = 0f;
+    private int wave1SpawnIndex = 0;
 
     private ShapeRenderer shapeRenderer;
     private SpriteBatch spriteBatch;
@@ -78,20 +86,9 @@ public class Main extends ApplicationAdapter {
 
         player.registerObserver(gameHUD);
 
-        Fairy redFairy = EntityFactory.createFairy(
-            150f, 380f, "Red Fairy", 20
-        );
-
-        Fairy blueFairy = EntityFactory.createFairy(
-            250f, 380f, "Blue Fairy", 20, "fairy_idle_blue"
-        );
-
-        fairies.add(redFairy);
-        fairies.add(blueFairy);
-
-        boss = EntityFactory.createBoss(
-            250f, 400f, "Rumia", 150
-        );
+        boss = EntityFactory.createBoss(200f, 420f, "Rumia", 150);
+        boss.setMovementPattern(new TargetPointMovement(200f, 420f, 150f));
+        boss.setShootingPattern(new SpreadShot(220f, 5, 25f, 10, player, "bullet_danmaku_red"));
 
         powerItem = EntityFactory.createItem(
             180f, 450f, ItemType.POWER
@@ -102,20 +99,51 @@ public class Main extends ApplicationAdapter {
         );
 
         entities.add(player);
-        entities.addAll(fairies);
         entities.add(boss);
         entities.add(pointItem);
         entities.add(powerItem);
 
         inputHandler.setEntities(entities);
+        bulletManager.setEntities(entities);
+    }
+
+    private void updateFairyWave(float delta) {
+        float[] spawnX = {60f, 68f, 76f, 84f, 92f};
+        waveTimer += delta;
+        if (wave1SpawnIndex < spawnX.length && waveTimer >= 1.0f + wave1SpawnIndex * 0.267f) {
+            Fairy fairy = EntityFactory.createFairy(spawnX[wave1SpawnIndex++], 480f,
+                "Left S-Curve Fairy", 8, "fairy_idle_blue");
+            fairy.setMovementPattern(new SCurveMovement(130f, (float)Math.toRadians(270), false));
+            fairy.setShootingPattern(null);
+            fairies.add(fairy);
+            entities.add(fairy);
+        }
+    }
+
+    private void resetFairyWave() {
+        waveTimer = 0f;
+        wave1SpawnIndex = 0;
     }
 
     private void updateEnemyScheduler(float delta) {
+        updateFairyWave(delta);
+        fairies.removeIf(f -> f.isDestroyed() || f.isOffScreen(416, 560));
         enemyShootTimer += delta;
-
-        if (enemyShootTimer >= 1.5f) {
+        if (enemyShootTimer >= 1.5f && boss != null && !boss.isDestroyed()) {
             boss.shootBullet(bulletManager);
             enemyShootTimer = 0f;
+        }
+        phaseTimer += delta;
+        if (phaseTimer >= 4.0f && boss != null && !boss.isDestroyed()) {
+            phaseTimer = 0f;
+            currentPhase = (currentPhase + 1) % 2;
+            if (currentPhase == 0) {
+                boss.setMovementPattern(new TargetPointMovement(120f, 420f, 150f));
+                boss.setShootingPattern(new SpreadShot(220f, 5, 25f, 10, player, "bullet_danmaku_red"));
+            } else {
+                boss.setMovementPattern(new TargetPointMovement(280f, 420f, 150f));
+                boss.setShootingPattern(new AlternatingRingShot(180f, 16, 10));
+            }
         }
     }
 
@@ -130,17 +158,14 @@ public class Main extends ApplicationAdapter {
         player.resetGame();
 
         fairies.clear();
-        fairies.add(EntityFactory.createFairy(150, 380, "Red Fairy", 20));
-        fairies.add(EntityFactory.createFairy(250, 380, "Blue Fairy", 20, "fairy_idle_blue"));
-
-        boss = EntityFactory.createBoss(250, 400, "Rumia", 150);
-        powerItem = EntityFactory.createItem(180, 450, ItemType.POWER);
-        pointItem = EntityFactory.createItem(220, 480, ItemType.POINT);
-
-        entities.addAll(fairies);
+        resetFairyWave();
+        boss = EntityFactory.createBoss(200f, 420f, "Rumia", 150);
+        boss.setMovementPattern(new TargetPointMovement(200f, 420f, 150f));
+        boss.setShootingPattern(new SpreadShot(220f, 5, 25f, 10, player, "bullet_danmaku_red"));
         entities.add(boss);
-        entities.add(powerItem);
-        entities.add(pointItem);
+        currentPhase = 0;
+        phaseTimer = 0f;
+        enemyShootTimer = 0f;
     }
 
 

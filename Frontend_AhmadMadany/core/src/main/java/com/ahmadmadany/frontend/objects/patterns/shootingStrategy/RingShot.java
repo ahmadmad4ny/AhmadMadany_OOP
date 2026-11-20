@@ -33,7 +33,11 @@ public class RingShot implements ShootingPattern {
             Bullet bullet = isPlayer
                 ? bulletManager.spawnPlayerBullet(originX, originY, vx, vy, damage)
                 : bulletManager.spawnEnemyBullet(originX, originY, vx, vy, damage);
-            if (bullet != null && bulletMovementPattern != null) bullet.setMovementPattern(bulletMovementPattern);
+            if (bullet != null) {
+                bullet.setAngle(i * angleStep);
+                bullet.setSpeed(bulletSpeed);
+                if (bulletMovementPattern != null) bullet.setMovementPattern(bulletMovementPattern);
+            }
         }
     }
 

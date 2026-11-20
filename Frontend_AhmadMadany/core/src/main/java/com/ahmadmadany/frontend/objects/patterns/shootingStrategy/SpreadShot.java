@@ -23,6 +23,10 @@ public class SpreadShot implements ShootingPattern {
         this(speed, numBullets, spreadAngleDegrees, null);
     }
 
+    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage) {
+        this(speed, numBullets, spreadAngleDegrees, damage, 0f, null, null, null);
+    }
+
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, GameObject target) {
         this.speed = speed;
         this.numBullets = numBullets;

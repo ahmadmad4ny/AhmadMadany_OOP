@@ -32,12 +32,10 @@ public class CollisionReferee {
                 if (entity instanceof Enemy enemy && !enemy.isDestroyed()) {
 
                     if (bullet.getCoreHitbox().overlaps(enemy.getCoreHitbox())) {
-                        if (!player.isInvulnerable()){
-                            System.out.println("[CollisionReferee] CORE HIT! Enemy Bullet hit " + player.getName() + " for " + bullet.getDamage() + " DMG!");
-                            player.takeDamage(100, bulletManager, entities);
-                            bullet.destroy();
-                            break;
-                        }
+                        boolean defeated = enemy.takeDamage(bullet.getDamage());
+                        bullet.destroy();
+                        if (defeated) player.addScore(enemy.getScoreValue());
+                        break;
                     }
                 }
             }
